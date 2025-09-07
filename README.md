@@ -1,4 +1,4 @@
-# Реализовация WorkerPool и покрытие его тестами.[![Test](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml/badge.svg)](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml)
+# Реализация WorkerPool и покрытие его тестами.[![Test](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml/badge.svg)](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml)
 ```go
 package worker_pool
 
