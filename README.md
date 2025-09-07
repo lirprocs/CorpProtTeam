@@ -1,4 +1,4 @@
-Необходимо реализовать WorkerPool и покрыть тестами.
+Необходимо реализовать WorkerPool и покрыть тестами.             [![Test](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml/badge.svg)](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml)
 
 package worker_pool
 
