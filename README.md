@@ -1,5 +1,5 @@
-Необходимо реализовать WorkerPool и покрыть тестами.             [![Test](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml/badge.svg)](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml)
-
+# Реализовация WorkerPool и покрытие его тестами.[![Test](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml/badge.svg)](https://github.com/lirprocs/CorpProtTeam/actions/workflows/test.yaml)
+```go
 package worker_pool
 
 type WorkerPool struct {
@@ -28,3 +28,4 @@ func (wp *WorkerPool) Stop() {
 func (wp *WorkerPool) StopWait() {
 
 }
+```
