@@ -13,9 +13,15 @@ type WorkerPool struct {
 	mu       sync.Mutex
 }
 
-func NewWorkerPool(numberOfWorkers int) *WorkerPool {
+func NewWorkerPool(size, numberOfWorkers int) *WorkerPool {
+	if numberOfWorkers <= 0 {
+		panic("numberOfWorkers must be > 0")
+	}
+	if size <= 0 {
+		panic("size must be > 0")
+	}
 	wp := &WorkerPool{
-		tasks:  make(chan func(), 1024),
+		tasks:  make(chan func(), size),
 		stopCh: make(chan struct{}),
 	}
 
