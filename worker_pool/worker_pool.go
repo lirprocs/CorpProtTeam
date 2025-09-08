@@ -4,6 +4,8 @@ import (
 	"sync"
 )
 
+const size = 1024
+
 type WorkerPool struct {
 	tasks    chan func()
 	wg       sync.WaitGroup
@@ -13,12 +15,9 @@ type WorkerPool struct {
 	mu       sync.Mutex
 }
 
-func NewWorkerPool(size, numberOfWorkers int) *WorkerPool {
+func NewWorkerPool(numberOfWorkers int) *WorkerPool {
 	if numberOfWorkers <= 0 {
 		panic("numberOfWorkers must be > 0")
-	}
-	if size <= 0 {
-		panic("size must be > 0")
 	}
 	wp := &WorkerPool{
 		tasks:  make(chan func(), size),
