@@ -7,12 +7,13 @@ import (
 const size = 1024
 
 type WorkerPool struct {
-	tasks    chan func()
-	wg       sync.WaitGroup
-	stopOnce sync.Once
-	stopCh   chan struct{}
-	stopped  bool
-	mu       sync.Mutex
+	tasks     chan func()
+	wg        sync.WaitGroup
+	runningWg sync.WaitGroup
+	stopOnce  sync.Once
+	stopCh    chan struct{}
+	stopped   bool
+	mu        sync.Mutex
 }
 
 func NewWorkerPool(numberOfWorkers int) *WorkerPool {
@@ -36,13 +37,18 @@ func (wp *WorkerPool) worker() {
 		select {
 		case <-wp.stopCh:
 			return
-		case task, ok := <-wp.tasks:
-			if !ok {
-				return
-			}
-			task()
-			wp.wg.Done()
+		default:
 		}
+
+		task, ok := <-wp.tasks
+		if !ok {
+			return
+		}
+
+		wp.runningWg.Add(1)
+		task()
+		wp.runningWg.Done()
+		wp.wg.Done()
 	}
 }
 
@@ -55,10 +61,11 @@ func (wp *WorkerPool) Submit(task func()) {
 	}
 	wp.mu.Unlock()
 
+	wp.wg.Add(1)
 	select {
 	case wp.tasks <- task:
-		wp.wg.Add(1)
 	case <-wp.stopCh:
+		wp.wg.Done()
 		panic("Submit called after Stop/StopWait")
 	}
 }
@@ -81,7 +88,8 @@ func (wp *WorkerPool) Stop() {
 		wp.mu.Unlock()
 
 		close(wp.stopCh)
-		close(wp.tasks)
+
+		wp.runningWg.Wait()
 	})
 }
 

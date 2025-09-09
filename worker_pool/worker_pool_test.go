@@ -1,6 +1,7 @@
 package worker_pool
 
 import (
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -146,21 +147,24 @@ func TestSubmitWait(t *testing.T) {
 
 func TestStop(t *testing.T) {
 	var counter int32
-	numTask := 50
+	numTask := 10
 
 	wp := NewWorkerPool(2)
 
 	for i := 0; i < numTask; i++ {
 		wp.Submit(func() {
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
+			fmt.Println("Done")
 			atomic.AddInt32(&counter, 1)
 		})
 	}
 
+	time.Sleep(50 * time.Millisecond)
+
 	wp.Stop()
 
-	if counter == int32(numTask) {
-		t.Errorf("TestStop: expected %d, got %d", numTask, counter)
+	if counter != int32(2) {
+		t.Errorf("TestStop: expected %d, got %d", 2, counter)
 	}
 }
 
