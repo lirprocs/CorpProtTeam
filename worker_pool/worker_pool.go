@@ -12,7 +12,8 @@ type WorkerPool struct {
 	runningWg sync.WaitGroup
 	stopOnce  sync.Once
 	stopCh    chan struct{}
-	stopped   bool
+	accepting bool
+	hardStop  bool
 	mu        sync.Mutex
 }
 
@@ -21,8 +22,9 @@ func NewWorkerPool(numberOfWorkers int) *WorkerPool {
 		panic("numberOfWorkers must be > 0")
 	}
 	wp := &WorkerPool{
-		tasks:  make(chan func(), size),
-		stopCh: make(chan struct{}),
+		tasks:     make(chan func(), size),
+		stopCh:    make(chan struct{}),
+		accepting: true,
 	}
 
 	for i := 0; i < numberOfWorkers; i++ {
@@ -37,25 +39,30 @@ func (wp *WorkerPool) worker() {
 		select {
 		case <-wp.stopCh:
 			return
-		default:
-		}
+		case task, ok := <-wp.tasks:
+			if !ok {
+				return
+			}
+			wp.mu.Lock()
+			if wp.hardStop {
+				wp.mu.Unlock()
+				wp.wg.Done()
+				continue
+			}
+			wp.runningWg.Add(1)
+			wp.mu.Unlock()
 
-		task, ok := <-wp.tasks
-		if !ok {
-			return
+			task()
+			wp.runningWg.Done()
+			wp.wg.Done()
 		}
-
-		wp.runningWg.Add(1)
-		task()
-		wp.runningWg.Done()
-		wp.wg.Done()
 	}
 }
 
 // Submit - добавить таску в воркер пул
 func (wp *WorkerPool) Submit(task func()) {
 	wp.mu.Lock()
-	if wp.stopped {
+	if !wp.accepting {
 		wp.mu.Unlock()
 		panic("Submit called after Stop/StopWait")
 	}
@@ -84,11 +91,11 @@ func (wp *WorkerPool) SubmitWait(task func()) {
 func (wp *WorkerPool) Stop() {
 	wp.stopOnce.Do(func() {
 		wp.mu.Lock()
-		wp.stopped = true
+		wp.accepting = false
+		wp.hardStop = true
 		wp.mu.Unlock()
 
 		close(wp.stopCh)
-
 		wp.runningWg.Wait()
 	})
 }
@@ -97,7 +104,7 @@ func (wp *WorkerPool) Stop() {
 func (wp *WorkerPool) StopWait() {
 	wp.stopOnce.Do(func() {
 		wp.mu.Lock()
-		wp.stopped = true
+		wp.accepting = false
 		wp.mu.Unlock()
 
 		close(wp.tasks)
